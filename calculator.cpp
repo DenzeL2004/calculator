@@ -183,7 +183,7 @@ static double Unary_operation (const char **expr_ptr)
         val = (double) cos (val);
     }
 
-    else if (!strncmp (*expr_ptr, "log",  2))
+    else if (!strncmp (*expr_ptr, "log",  3))
     {
         (*expr_ptr) += 3;
 
