@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 #include <ctype.h>
 
 #include "calculator.h"
@@ -7,16 +8,31 @@
 #include "src/Generals_func/generals.h"
 
 
-static int My_quick_pow (const int val, int degree);
+static double My_quick_pow (const double val, int degree);
+
+
+static double Expr     (const char **expr_ptr);
+
+static double Term     (const char **expr_ptr);
+
+static double Degree   (const char **expr_ptr);
+
+static double Prim     (const char **expr_ptr);
+
+static double Unary_operation       (const char **expr_ptr);
+
+static int    Check_unary_operation (const char **expr_ptr);
+
+static int Get_num  (const char **expr_ptr);
 
 //=================================================================================================
 
-int Parce_math_expression (const char *expression)
+double Parce_math_expression (const char *expression)
 {
     assert (expression != nullptr && "expression is nullptr");
     
     const char *expr_ptr = expression;
-    int val = Expr (&expr_ptr);
+    double val = Expr (&expr_ptr);
 
     assert (*expr_ptr == '\0' && "expression ended with a non-null character");
 
@@ -25,18 +41,18 @@ int Parce_math_expression (const char *expression)
 
 //=================================================================================================
 
-int Expr (const char **expr_ptr)
+static double Expr (const char **expr_ptr)
 {
     assert (expr_ptr != nullptr && "expr_ptr is nullptr");
 
-    int val1 = Term (expr_ptr);
+    double val1 = Term (expr_ptr);
 
     while (**expr_ptr == '+' || **expr_ptr == '-')
     {
         const char operation = **expr_ptr;
         (*expr_ptr)++;
 
-        int val2 = Term (expr_ptr);
+        double val2 = Term (expr_ptr);
 
         if (operation == '+')
             val1 = val1 + val2;
@@ -49,23 +65,26 @@ int Expr (const char **expr_ptr)
 
 //=================================================================================================
 
-int Term (const char **expr_ptr)
+static double Term (const char **expr_ptr)
 {
     assert (expr_ptr != nullptr && "expr_ptr is nullptr");
 
-    int val1 = Prim (expr_ptr);
+    double val1 = Degree (expr_ptr);
     
     while (**expr_ptr == '*' || **expr_ptr == '/')
     {
         const char operation = **expr_ptr;
         (*expr_ptr)++;
 
-        int val2 = Prim (expr_ptr);
+        double val2 = Degree (expr_ptr);
 
         if (operation == '*')
             val1 = val1 * val2;
         else
+        {
+            assert (!Is_zero (val2) && "val2 is zero");
             val1 = val1 / val2;
+        }
     }
 
     return val1;   
@@ -73,11 +92,31 @@ int Term (const char **expr_ptr)
 
 //=================================================================================================
 
-int Prim (const char **expr_ptr)
+static double Degree (const char **expr_ptr)
 {
     assert (expr_ptr != nullptr && "expr_ptr is nullptr");
 
-    int val = 0;
+    double val = Prim (expr_ptr);
+    
+    while (**expr_ptr == '^')
+    {
+        (*expr_ptr)++;
+
+        int degree = (int) Prim (expr_ptr);
+        
+        val = My_quick_pow (val, degree);
+    }
+
+    return val;   
+}
+
+//=================================================================================================
+
+static double Prim (const char **expr_ptr)
+{
+    assert (expr_ptr != nullptr && "expr_ptr is nullptr");
+
+    double val = 0;
 
     if (**expr_ptr == '(')
     {
@@ -87,23 +126,19 @@ int Prim (const char **expr_ptr)
         assert (**expr_ptr == ')' && "expression is not closed by \')\'");
         (*expr_ptr)++;
     }
+    
+    else if (Check_unary_operation (expr_ptr))
+        val = Unary_operation (expr_ptr);
     else
         val = Get_num (expr_ptr);
 
-    if (**expr_ptr == '^')
-    {
-        (*expr_ptr)++;
-        int degree = Prim (expr_ptr);
-
-        val = My_quick_pow (val, degree);
-    }
 
     return val;
 }
 
 //=================================================================================================
 
-static int My_quick_pow (const int val, int degree)
+static double My_quick_pow (const double val, int degree)
 {
     if (degree == 0)
         return 1;
@@ -113,20 +148,72 @@ static int My_quick_pow (const int val, int degree)
 
     if (degree % 2 == 0)
     {
-        int val_ = My_quick_pow (val, degree / 2);
+        double val_ = My_quick_pow (val, degree / 2);
         return val_ * val_;
     }
 
     else
     {
-        int val_ = My_quick_pow (val, degree - 1);
+        double val_ = My_quick_pow (val, degree - 1);
         return val_ * val;
     }
 }
 
 //=================================================================================================
 
-int Get_num (const char **expr_ptr)
+static double Unary_operation (const char **expr_ptr)
+{
+    assert (expr_ptr != nullptr && "expr_ptr is nullptr");
+
+    double val = 0;
+
+    if (!strncmp (*expr_ptr, "sin", 3))
+    {
+        (*expr_ptr) += 3;
+
+        val = Prim (expr_ptr);
+        val = (double) sin (val);
+    }
+
+    else if (!strncmp (*expr_ptr, "cos", 3))
+    {
+        (*expr_ptr) += 3;
+
+        val = Prim (expr_ptr);
+        val = (double) cos (val);
+    }
+
+    else if (!strncmp (*expr_ptr, "log",  2))
+    {
+        (*expr_ptr) += 3;
+
+        val = Prim (expr_ptr);
+        assert (val > 0 && "val2 is positive number");
+        
+        val = (double) log (val);
+    }
+
+    return val;
+}
+
+//=================================================================================================
+
+static int Check_unary_operation (const char **expr_ptr)
+{
+    assert (expr_ptr != nullptr && "expr_ptr is nullptr");
+
+    if (!strncmp (*expr_ptr, "sin", 3)) return 1;
+
+    if (!strncmp (*expr_ptr, "cos", 3)) return 1;
+
+    if (!strncmp (*expr_ptr, "log", 3)) return 1;
+
+    return 0;
+}
+
+//=================================================================================================
+
+static int Get_num (const char **expr_ptr)
 {
     assert (expr_ptr != nullptr && "expr_ptr is nullptr");
 

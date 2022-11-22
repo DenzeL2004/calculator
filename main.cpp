@@ -29,9 +29,9 @@ int main ()
     }
 
 
-    int ans = Parce_math_expression (expression);
+    double ans = Parce_math_expression (expression);
 
-    printf ("%s = %d", expression, ans);
+    printf ("%s = %.4lg", expression, ans);
     
     
     
