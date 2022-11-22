@@ -6,6 +6,11 @@
 #include "src/log_info/log_errors.h"
 #include "src/Generals_func/generals.h"
 
+
+static int My_quick_pow (const int val, int degree);
+
+//=================================================================================================
+
 int Parce_math_expression (const char *expression)
 {
     assert (expression != nullptr && "expression is nullptr");
@@ -18,6 +23,7 @@ int Parce_math_expression (const char *expression)
     return val;
 }
 
+//=================================================================================================
 
 int Expr (const char **expr_ptr)
 {
@@ -41,6 +47,7 @@ int Expr (const char **expr_ptr)
     return val1;
 }
 
+//=================================================================================================
 
 int Term (const char **expr_ptr)
 {
@@ -61,9 +68,10 @@ int Term (const char **expr_ptr)
             val1 = val1 / val2;
     }
 
-    return val1;
-    
+    return val1;   
 }
+
+//=================================================================================================
 
 int Prim (const char **expr_ptr)
 {
@@ -82,8 +90,41 @@ int Prim (const char **expr_ptr)
     else
         val = Get_num (expr_ptr);
 
+    if (**expr_ptr == '^')
+    {
+        (*expr_ptr)++;
+        int degree = Prim (expr_ptr);
+
+        val = My_quick_pow (val, degree);
+    }
+
     return val;
 }
+
+//=================================================================================================
+
+static int My_quick_pow (const int val, int degree)
+{
+    if (degree == 0)
+        return 1;
+    
+    if (degree == 1)
+        return val;
+
+    if (degree % 2 == 0)
+    {
+        int val_ = My_quick_pow (val, degree / 2);
+        return val_ * val_;
+    }
+
+    else
+    {
+        int val_ = My_quick_pow (val, degree - 1);
+        return val_ * val;
+    }
+}
+
+//=================================================================================================
 
 int Get_num (const char **expr_ptr)
 {
@@ -103,3 +144,5 @@ int Get_num (const char **expr_ptr)
 
     return val;
 }
+
+//=================================================================================================
