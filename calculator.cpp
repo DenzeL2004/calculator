@@ -23,7 +23,7 @@ static double Unary_operation       (const char **expr_ptr);
 
 static int    Check_unary_operation (const char **expr_ptr);
 
-static int Get_num  (const char **expr_ptr);
+static double Get_num  (const char **expr_ptr);
 
 //=================================================================================================
 
@@ -213,31 +213,21 @@ static int Check_unary_operation (const char **expr_ptr)
 
 //=================================================================================================
 
-static int Get_num (const char **expr_ptr)
+static double Get_num (const char **expr_ptr)
 {
     assert (expr_ptr != nullptr && "expr_ptr is nullptr");
 
-    int sign = 1;
+    int shift = 0;
 
-    if (**expr_ptr == '-')
-    {
-        sign = -1;
-        (*expr_ptr)++;
-    }
+    double val = 0;
 
-    int val = 0;
+    sscanf (*expr_ptr, "%lg %n", &val, &shift);    
 
-    const char *ptr_old = *expr_ptr;
+    assert (shift != 0 && "the expr_ptr did not move");
 
-    while (isdigit (**expr_ptr))
-    {
-        val = val * 10 + (**expr_ptr - '0');
-        (*expr_ptr)++;
-    }
+    *expr_ptr += shift;
 
-    assert (*expr_ptr > ptr_old && "the expr_ptr did not move");
-
-    return val * sign;
+    return val;
 }
 
 //=================================================================================================
