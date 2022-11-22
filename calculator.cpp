@@ -130,6 +130,14 @@ int Get_num (const char **expr_ptr)
 {
     assert (expr_ptr != nullptr && "expr_ptr is nullptr");
 
+    int sign = 1;
+
+    if (**expr_ptr == '-')
+    {
+        sign = -1;
+        (*expr_ptr)++;
+    }
+
     int val = 0;
 
     const char *ptr_old = *expr_ptr;
@@ -142,7 +150,7 @@ int Get_num (const char **expr_ptr)
 
     assert (*expr_ptr > ptr_old && "the expr_ptr did not move");
 
-    return val;
+    return val * sign;
 }
 
 //=================================================================================================
